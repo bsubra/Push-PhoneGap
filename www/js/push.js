@@ -56,8 +56,9 @@ var push = {
         push.deviceId = token;// Save.
         Kinvey.Push.register(tokenId);
       }
+      push.status.innerHTML = 'Registered for push.';
     }, function(error) {
-      alert('Error registering for Push Notifications: ' + error);
+      push.status.innerHTML = 'Failed to register: ' + error;
     }, {
       alert    : 'true',// Subscribe to this notification type (iOS only).
       badge    : 'true',// Subscribe to this notification type (iOS only).
@@ -69,7 +70,7 @@ var push = {
     // The device will be registered with Kinvey in `app.onPushMessage`.
 
     // Update.
-    push.status.innerHTML = 'Registered for push.';
+    push.status.innerHTML = 'Registering for push.';
   },
 
   /**
