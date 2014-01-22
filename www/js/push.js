@@ -1,5 +1,5 @@
 /**
- * Copyright 2013 Kinvey, Inc.
+ * Copyright 2014 Kinvey, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -56,7 +56,12 @@ var push = {
         push.deviceId = token;// Save.
         Kinvey.Push.register(tokenId);
       }
-    }, function() { }, {
+    }, function(error) {
+      alert('Error registering for Push Notifications: ' + error);
+    }, {
+      alert    : 'true',// Subscribe to this notification type (iOS only).
+      badge    : 'true',// Subscribe to this notification type (iOS only).
+      sound    : 'true',// Subscribe to this notification type (iOS only).
       ecb      : 'push.onMessage',// Callback to invoke on new Push Notification.
       senderID : 'Push API Key'// Google API Key (Android only).
     });
