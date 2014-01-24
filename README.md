@@ -5,7 +5,7 @@
 
 1. Make sure the [PhoneGap CLI](https://github.com/mwbrooks/phonegap-cli) is installed.
 2. Replace `App Key` and `App Secret` (`www/js/index.js`) with your application credentials.
-3. For Android, replace `Push API Key` (`www/js/push.js`) with your Google API Key.
+3. For Android, replace `Project ID` (`www/js/push.js`) with your Google Project ID.
 4. Build the project: `phonegap build <android|ios>`.
 
 ## Testing

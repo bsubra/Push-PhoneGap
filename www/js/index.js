@@ -32,15 +32,15 @@ var app = {
     // Bind any events that are required on startup. Common events are: `load`,
     // `deviceready`, `offline`, and `online`.
     document.addEventListener('deviceready', app.onDeviceReady, false);
-
-    // Prepare push (see `js/push.js).
-    push.initialize();
   },
 
   /**
    * The deviceready event handler.
    */
   onDeviceReady: function() {
+    // Initialize push.
+    push.initialize();
+
     // Initialize Kinvey. Paste your app key and secret below.
     var promise = Kinvey.init({
       appKey    : 'App Key',

@@ -44,33 +44,96 @@ var push = {
   register: function() {
     // Check preconditions.
     if(null != push.deviceId) {
-      push.status.innerHTML = 'Cannot register: already registered for push.';
+      push.status.innerHTML = 'already registered.';
       return;
     }
 
-    // The success- and error callbacks are never called. This is a bug with
-    // the PushPlugin.
-    window.plugins.pushNotification.register(function(token) {
-      // Register the device with Kinvey (iOS only).
-      if('ios' === window.device.platform.toLowerCase()) {
-        push.deviceId = token;// Save.
-        Kinvey.Push.register(tokenId);
-      }
-      push.status.innerHTML = 'Registered for push.';
-    }, function(error) {
-      push.status.innerHTML = 'Failed to register: ' + error;
-    }, {
-      alert    : 'true',// Subscribe to this notification type (iOS only).
-      badge    : 'true',// Subscribe to this notification type (iOS only).
-      sound    : 'true',// Subscribe to this notification type (iOS only).
-      ecb      : 'push.onMessage',// Callback to invoke on new Push Notification.
-      senderID : 'Push API Key'// Google API Key (Android only).
-    });
+    // Register for Android / iOS.
+    var pushNotification = window.plugins.pushNotification;
+    if('android' === device.platform.toLowerCase()) {// Android.
+      pushNotification.register(push.successHandler, push.errorHandler, {
+        ecb      : 'push.onNotificationGCM',
+        senderID : 'Project ID'// Google Project ID.
+      });
+    }
+    else {// iOS.
+      pushNotification.register(push.tokenHandler, push.errorHandler, {
+        alert : 'true',
+        badge : 'true',
+        sound : 'true',
+        ecb   : 'push.onNotificationAPN'
+      });
+    }
+    push.status.innerHTML = 'registering…';
+  },
 
-    // The device will be registered with Kinvey in `app.onPushMessage`.
+  /**
+   * General push success handler.
+   */
+  successHandler: function(result) {
+    push.status.innerHTML = 'result: ' + result;
+  },
 
-    // Update.
-    push.status.innerHTML = 'Registering for push.';
+  /**
+   * General push error handler.
+   */
+  errorHandler: function(error) {
+    push.status.innerHTML = 'error: ' + error;
+  },
+
+  /**
+   * Token handler. Registers device with Kinvey.
+   */
+  tokenHandler: function(token) {
+    push.deviceId = token;// Save.
+
+    // Register device with Kinvey.
+    Kinvey.Push.register(token).then(function() {
+      push.status.innerHTML = 'registered.';
+    }, push.errorHandler);
+  },
+
+  /**
+   * Android notification handler.
+   */
+  onNotificationGCM: function(e) {
+    // Handle notification.
+    switch(e.event) {
+      // Register device with Kinvey.
+      case 'registered':
+        push.tokenHandler(e.regid);
+        break;
+
+      // Handle pus notification.
+      case 'message':
+        navigator.notification.alert(e.payload.msg);
+        break;
+
+      // Handle error.
+      case 'error':
+        push.errorHandler(e.msg);
+        break;
+
+      default:
+        push.status.innerHTML = e;
+        break;
+    }
+  },
+
+  /**
+   * iOS notification handler.
+   */
+  onNotificationAPN: function(e) {
+    if(event.alert) {
+      navigator.notification.alert(event.alert);
+    }
+    if(event.sound) {
+      var snd = new Media(event.sound);
+      snd.play();
+    }
+    if(event.badge) {
+      window.plugins.pushNotification.setApplicationIconBadgeNumber(push.successHandler, push.errorHandler, event.badge)
+    }
   },
 
   /**
@@ -79,38 +142,18 @@ var push = {
   unregister: function() {
     // Check preconditions.
     if(null == push.deviceId) {
-      push.status.innerHTML = 'Cannot unregister: not registered for push.';
+      push.status.innerHTML = 'already unregistered.';
       return;
     }
 
-    // Unregister device.
+    // Unregister.
+    push.status.innerHTML = 'unregistering…';
+
+    // Unregister device, and unregister from Kinvey.
     window.plugins.pushNotification.unregister(function() { });
-    Kinvey.Push.unregister(push.deviceId);
-
-    // Update.
-    push.deviceId         = null;
-    push.status.innerHTML = 'Not registered for push.';
-  },
-
-  /**
-   * Callback invoked when a new Push Notification is received.
-   */
-  onMessage: function(data) {
-    // The `registered` event is fired by the `push.register` function. Here,
-    // register the device with Kinvey (Android only).
-    if('registered' === data.event) {
-      push.deviceId = data.regid;// Save.
-      Kinvey.Push.register(push.deviceId);
-    }
-
-    // Push Notifications are handled here.
-
-    // Show a simple alert on receiving a Push Notification.
-    if('message' === data.event) {// Android.
-      alert('Push Notification received: ' + data.payload.msg);
-    }
-    if(data.alert) {// iOS.
-      alert('Push Notification received: ' + data.alert);
-    }
+    Kinvey.Push.unregister(push.deviceId).then(function() {
+      push.deviceId = null;
+      push.status.innerHTML = 'unregistered.';
+    }, push.errorHandler);
   }
 };
