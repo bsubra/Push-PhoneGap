@@ -97,33 +97,24 @@ var push = {
    * Android notification handler.
    */
   onNotificationGCM: function(e) {
-    // Handle notification.
-    switch(e.event) {
-      // Register device with Kinvey.
-      case 'registered':
-        push.tokenHandler(e.regid);
-        break;
-
-      // Handle pus notification.
-      case 'message':
-        navigator.notification.alert(e.payload.msg);
-        break;
-
-      // Handle error.
-      case 'error':
-        push.errorHandler(e.msg);
-        break;
-
-      default:
-        push.status.innerHTML = e;
-        break;
+    if('registered' === e.event) {
+      push.tokenHandler(e.regid);
+    }
+    else if('message' === e.event) {
+      navigator.notification.alert(e.payload.msg);
+    }
+    else if('error' === e.event) {
+      push.errorHandler(e.msg);
+    }
+    else {// Unknown event.
+      push.status.innerHTML = e;
     }
   },
 
   /**
    * iOS notification handler.
    */
-  onNotificationAPN: function(e) {
+  onNotificationAPN: function(event) {
     if(event.alert) {
       navigator.notification.alert(event.alert);
     }
